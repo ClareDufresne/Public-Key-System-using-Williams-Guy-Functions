@@ -3,7 +3,7 @@ publicKeySystem: main.o publicKeySystem.o
 	
 build: publicKeySystem
 	cargo build  --manifest-path=jacobi/Cargo.toml
-
+ 
 clean:
 	rm *.o publicKeySystem
 

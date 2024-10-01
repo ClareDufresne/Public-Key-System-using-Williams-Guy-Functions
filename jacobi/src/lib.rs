@@ -21,7 +21,7 @@ pub extern "C" fn jacobi_new(num1: &i32, num2: &i32) -> i8 {
 
     // The output
     let mut t = true;
-
+ 
     // The second bit of m (will be a after swap)
     let mut m_2 = m.bit(1);
 

@@ -8,5 +8,5 @@ void doubleAndAddOne(long long wPrev[4], long long max, long long P1, long long 
 void doubleAndAddTwo(long long wPrev[4], long long max, long long P1, long long P2, long long Q, long long p, long long delta);
 bool validInput(long long P1, long long P2, long long p, long long Q, long long a, long long b);
 long long positiveMod (long long n, long long p);
-
+ 
 #endif  

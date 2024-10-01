@@ -4,7 +4,7 @@
 #include <boost/dynamic_bitset.hpp>
 #include "jacobi/include/jacobi.h"
 #include "publicKeySystem.h"
-
+ 
 using namespace std;
 
 long long getBinaryDigits(long long n);

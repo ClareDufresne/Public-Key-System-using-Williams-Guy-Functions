@@ -2,7 +2,7 @@
 
 #ifndef JACOBI_H
 #define JACOBI_H
-
+ 
 #ifdef __cplusplus
 extern "C" {
 #endif

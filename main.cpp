@@ -20,7 +20,7 @@ int main(){
         cout << "L" << max2 << "," << max1 << ": "  << positiveMod(Wb[0], p) << endl;
     }
     else
-        cout << "Error: Keys do not match" << endl;
+        cout << "Error Keys do not match" << endl;
 
     return 0;
 }
