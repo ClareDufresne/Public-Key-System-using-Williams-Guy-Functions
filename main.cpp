@@ -13,7 +13,7 @@ int main(){
     mpz_int P1, P2, p;
     mpz_int Q = 1;
     //Eventually need to change this to calculate only Alice or Bob's information
-
+ 
     while (!getInitialValues(P1, P2, max1, max2, p)){
         cout << "Invalid input" << endl << endl;
     }

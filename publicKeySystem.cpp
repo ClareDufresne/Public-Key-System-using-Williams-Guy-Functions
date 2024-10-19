@@ -93,7 +93,7 @@ bool validInput(mpz_int P1, mpz_int P2, mpz_int p, mpz_int Q, mpz_int a, mpz_int
     mpz_clear(gcd);
     return false;
 }
-
+ 
 void doubleAndAddOne(mpz_int wPrev[4], mpz_int max, mpz_int P1, mpz_int P2, mpz_int Q, mpz_int p, mpz_int delta){
     mpz_int L1, K1;
     mpz_int *A = &wPrev[0], *B = &wPrev[1], *C = &wPrev[2], *D = &wPrev[3]; //so equations resemble those in the paper
