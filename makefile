@@ -1,17 +1,14 @@
-publicKeySystem: main.o publicKeySystem.o
-	g++ main.o publicKeySystem.o -I jacobi/include -l jacobi -L ./jacobi -o publicKeySystem
-	
-build: publicKeySystem
-	cargo build  --manifest-path=jacobi/Cargo.toml
- 
-clean:
-	rm *.o publicKeySystem
+publicKeySystem: main.o publicKeySystem.o test
+	g++ -std=c++14 main.o publicKeySystem.o -o publicKeySystem -lgmp
 
-clean_all: clean
-	cargo clean  --manifest-path=jacobi/Cargo.toml
+clean:
+	rm *.o publicKeySystem test
 
 publicKeySystem.o: publicKeySystem.cpp publicKeySystem.h
-	g++ -c publicKeySystem.cpp 
+	g++ -std=c++14 -c publicKeySystem.cpp 
 
 main.o: main.cpp publicKeySystem.h
-	g++ -c main.cpp 
+	g++ -std=c++14 -c main.cpp 
+
+test: testing.cpp publicKeySystem.o
+	g++ -std=c++14 testing.cpp publicKeySystem.o -o test -lgmp

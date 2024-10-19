@@ -2,7 +2,7 @@
 
 An implementation of the Diffie-Hellman-like key exchange described by Roettger (2023) using the fourth-order generalizations of the Lucas functions developed by Williams and Guy (2011).
 <br><br><br>
- 
+
 ## References
 
 Roettger, E. L. (2023). A note on public key cryptography based on Williams-Guy functions. <em>Integers 23</em>. <https://doi.org/10.5281/zenodo.8349074>

@@ -1,19 +1,24 @@
 #include <math.h>
-#include <algorithm>
-#include <iostream>
+#include "gmp.h"
+#include "gmpxx.h"
+#include <boost/multiprecision/gmp.hpp>
 #include <boost/dynamic_bitset.hpp>
-#include "jacobi/include/jacobi.h"
+//#include "jacobi/include/jacobi.h"
 #include "publicKeySystem.h"
- 
+#include <iostream>
+
 using namespace std;
+using namespace boost::multiprecision;
 
-long long getBinaryDigits(long long n);
-long long square (long long num, long long p);
-long long gcd(long long a, long long b);
+//int getBinaryDigits(mpz_int n);
+vector<bool> decToBinary(mpz_int n, int &numDigits);
+mpz_int square (mpz_int num, mpz_int p);
+mpz_int gcd(mpz_int a, mpz_int b);
 
-bool publicKey(long long Wa[4], long long Wb[4], long long P1, long long P2, long long Q, long long p, long long max1, long long max2){
-    long long La, Ka, Lb, Kb;
-    long long delta = ((long long)(pow((double)P1, 2)) - 4*P2) % p;
+bool publicKey(mpz_int Wa[4], mpz_int Wb[4], mpz_int P1, mpz_int P2, mpz_int Q, mpz_int p, mpz_int max1, mpz_int max2){
+    mpz_int a=0, b=1;
+    mpz_int La, Ka, Lb, Kb;
+    mpz_int delta = (pow(P1, 2) - (4*P2)) % p;
 
     //Alice calls the first double and add algorithm
     doubleAndAddOne(Wa, max1, P1, P2, Q, p, delta);
@@ -44,7 +49,7 @@ bool publicKey(long long Wa[4], long long Wb[4], long long P1, long long P2, lon
     return false;
 }
 
-bool getInitialValues(long long &P1, long long &P2, long long &max1, long long &max2, long long &p){
+bool getInitialValues(mpz_int &P1, mpz_int &P2, mpz_int &max1, mpz_int &max2, mpz_int &p){
     cout << "Enter P1: ";
     cin >> P1;
     cout << "Enter P2: ";
@@ -60,7 +65,7 @@ bool getInitialValues(long long &P1, long long &P2, long long &max1, long long &
 }
 
 //Function for testing
-bool setInitialValues(long long &P1, long long &P2, long long &Q, long long &max1, long long &max2, long long &p){
+bool setInitialValues(mpz_int &P1, mpz_int &P2, mpz_int &Q, mpz_int &max1, mpz_int &max2, mpz_int &p){
     P1 = 4;     //2|P1
     P2 = 15;    
     Q = 1;      //Q will always equal 1 for the crypto algorithm
@@ -71,26 +76,33 @@ bool setInitialValues(long long &P1, long long &P2, long long &Q, long long &max
     return validInput(P1, P2, p, Q, max1, max2);
 }
 
-bool validInput(long long P1, long long P2, long long p, long long Q, long long a, long long b){
-    long long delta = square(P1, p) - 2*P2;
-    long long E = square(P2 + 4 * Q, p) - (4 * Q * square(P1, p));
-    long long D = E * square(delta, p) * square(Q, p);
+bool validInput(mpz_int P1, mpz_int P2, mpz_int p, mpz_int Q, mpz_int a, mpz_int b){
+    mpz_int delta = (square(P1, p) - 2*P2) % p;
+    mpz_int E = (square(P2 + 4 * Q, p) - (4 * Q * square(P1, p))) % p;
+    mpz_int D = (E * square(delta, p) * square(Q, p)) % p;
+	mpz_t gcd;     //legendre function uses the underlying mpz_t type (for which mpz_int is a wrapper)
 
-    //legendre
-    if (a != 0 && b != 0 && P1%2 == 0 && p%P1 != 0 && p%D != 0 && gcd(P1, P2) == 1 && jacobi_new(&delta, &p) == -1 && jacobi_new(&E, &p) == -1)
+    mpz_init(gcd);
+    mpz_gcd(gcd, P1.backend().data(), P2.backend().data());
+
+    if (a != 0 && b != 0 && P1%2 == 0 && p%P1 != 0 && p%D != 0 && mpz_cmp_si(gcd, 1) == 0 && mpz_legendre(delta.backend().data(), p.backend().data()) == -1 && mpz_legendre(E.backend().data(), p.backend().data()) == -1){
+        mpz_clear(gcd);
         return true;
+    }
 
+    mpz_clear(gcd);
     return false;
 }
 
-void doubleAndAddOne(long long wPrev[4], long long max, long long P1, long long P2, long long Q, long long p, long long delta){
-    long long L1, K1;
-    long long *A = &wPrev[0], *B = &wPrev[1], *C = &wPrev[2], *D = &wPrev[3]; //so equations resemble those in the paper
-    long long U2 = P1;
-    long long V2 = ((long long)(pow((double)P1, 2)) - 2*P2 - 4*Q) % p;
-    long long wNext[4];                                                       //Wi+1 representing {Lm, Km, Lm+1, Km+1}
-    long long h = getBinaryDigits(max);
-    boost::dynamic_bitset<> m(h, max);                                  //binary expansion of max
+void doubleAndAddOne(mpz_int wPrev[4], mpz_int max, mpz_int P1, mpz_int P2, mpz_int Q, mpz_int p, mpz_int delta){
+    mpz_int L1, K1;
+    mpz_int *A = &wPrev[0], *B = &wPrev[1], *C = &wPrev[2], *D = &wPrev[3]; //so equations resemble those in the paper
+    mpz_int U2 = P1;
+    mpz_int V2 = (pow(P1, 2) - 2*P2 - 4*Q) % p;
+    mpz_int wNext[4];                                                       //Wi+1 representing {Lm, Km, Lm+1, Km+1}
+    int h = 0;                                                              //number of digits in the binary expansion of max
+    vector<bool> m = decToBinary(max, h);
+    //boost::dynamic_bitset<> m(h, max);                                  //binary expansion of max
 
     //Set initial values L1, K1 for W0
     wPrev[0] = V2/(2*Q) % p;
@@ -98,11 +110,11 @@ void doubleAndAddOne(long long wPrev[4], long long max, long long P1, long long 
     wPrev[1] = U2/(2*Q) % p;
     K1 = wPrev[1];
     //Set L2 and K2 using (5)
-    wPrev[2] = ((long long)(pow((double)wPrev[0], 2)) + delta * (long long)(pow((double)wPrev[1], 2)) - 2) % p;
+    wPrev[2] = (pow(wPrev[0], 2) + delta * pow(wPrev[1], 2) - 2) % p;
     wPrev[3] = (2 * wPrev[0] * wPrev[1]) % p;
 
     //Compute Wi+1 using Wi until Wh = {Lm, Km, Lm+1, Km+1}
-    for(long long i = h-1; i > 0; i--){
+    for(int i = h-1; i > 0; i--){
         if(m[i-1] == 0){
             wNext[0] = (square(*A, p) + delta * square(*B, p) - 2) % p;
             wNext[1] = (2 * *A * *B) % p;
@@ -123,13 +135,13 @@ void doubleAndAddOne(long long wPrev[4], long long max, long long P1, long long 
     return;
 }
 
-void doubleAndAddTwo(long long wPrev[4], long long max, long long P1, long long P2, long long Q, long long p, long long delta){
-    long long *A = &wPrev[0], *B = &wPrev[1], *C = &wPrev[2], *D = &wPrev[3]; //so equations resemble those in the paper
-    long long wNext[4];                                                       //Wi+1 representing {Lm, Jm, Lm+1, Jm+1}
-    long long L1;
-    long long h = getBinaryDigits(max);
-    boost::dynamic_bitset<> m(h, max);                                  //binary expansion of max
-
+void doubleAndAddTwo(mpz_int wPrev[4], mpz_int max, mpz_int P1, mpz_int P2, mpz_int Q, mpz_int p, mpz_int delta){
+    mpz_int *A = &wPrev[0], *B = &wPrev[1], *C = &wPrev[2], *D = &wPrev[3]; //so equations resemble those in the paper
+    mpz_int wNext[4];                                                       //Wi+1 representing {Lm, Jm, Lm+1, Jm+1}
+    mpz_int L1;
+    int h = 0;                                                              //number of digits in the binary expansion of max
+    vector<bool> m = decToBinary(max, h);
+    
     //Set L2 and J2 using (8) to get w0 = {L1, 1, L2, J2}
     L1 = wPrev[0];
     wPrev[1] = 1;
@@ -137,7 +149,7 @@ void doubleAndAddTwo(long long wPrev[4], long long max, long long P1, long long 
     wPrev[3] = (2 * L1) % p;
 
     //Comput Wi+1 using Wi until Wh = {Lm, Jm, Lm+1, Jm+1}
-    for(long long i = h-1; i > 0; i--){
+    for(int i = h-1; i > 0; i--){
         if(m[i-1] == 0){
             wNext[0] = (square(*A, p) + delta * square(*B, p) -2) % p;
             wNext[1] = (2 * *A * *B) % p;
@@ -158,12 +170,12 @@ void doubleAndAddTwo(long long wPrev[4], long long max, long long P1, long long 
     return;
 }
 
-long long square (long long num, long long p){
-    return (long long)pow((double) num, 2) % p;
+mpz_int square (mpz_int num, mpz_int p){
+    return pow(num, 2) % p;
 }
 
 //return the positive value of n mod p
-long long positiveMod (long long n, long long p){
+mpz_int positiveMod (mpz_int n, mpz_int p){
     n = n % p;
     if(n < 0)
         n = n+p;
@@ -171,13 +183,27 @@ long long positiveMod (long long n, long long p){
     return n;
 }
 
-//given a decimal long longeger, return the number of digits in the binary expansion of that number
-long long getBinaryDigits(long long n){
-    return 1 + (long long) log2 ((double) n);
+vector<bool> decToBinary(mpz_int n, int &numDigits)
+{
+	vector<bool> binaryNum;
+
+	numDigits = 0;
+	while (n > 0) {
+		binaryNum.push_back((int)(n % 2));
+		n = n / 2;
+		numDigits++;
+	}
+
+	return binaryNum;
 }
 
+//given a decimal mpz_integer, return the number of digits in the binary expansion of that number
+/*int getBinaryDigits(mpz_int n){
+    return 1 + (mpz_int) log2 ((double) n);
+}*/
+
 //https://www.geeksforgeeks.org/gcd-in-cpp/
-long long gcd(long long a, long long b) 
+mpz_int gcd(mpz_int a, mpz_int b) 
 { 
     // Everything divides 0 
     if (a == 0) 
