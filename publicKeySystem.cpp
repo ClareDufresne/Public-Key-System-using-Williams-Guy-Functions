@@ -3,14 +3,12 @@
 #include "gmpxx.h"
 #include <boost/multiprecision/gmp.hpp>
 #include <boost/dynamic_bitset.hpp>
-//#include "jacobi/include/jacobi.h"
 #include "publicKeySystem.h"
 #include <iostream>
 
 using namespace std;
 using namespace boost::multiprecision;
 
-//int getBinaryDigits(mpz_int n);
 vector<bool> decToBinary(mpz_int n, int &numDigits);
 mpz_int square (mpz_int num, mpz_int p);
 mpz_int gcd(mpz_int a, mpz_int b);
@@ -85,7 +83,7 @@ bool validInput(mpz_int P1, mpz_int P2, mpz_int p, mpz_int Q, mpz_int a, mpz_int
     mpz_init(gcd);
     mpz_gcd(gcd, P1.backend().data(), P2.backend().data());
 
-    if (a != 0 && b != 0 && P1%2 == 0 && p%P1 != 0 && p%D != 0 && mpz_cmp_si(gcd, 1) == 0 && mpz_legendre(delta.backend().data(), p.backend().data()) == -1 && mpz_legendre(E.backend().data(), p.backend().data()) == -1){
+    if (D != 0 && P1 != 0 && a != 0 && b != 0 && P1%2 == 0 && p%P1 != 0 && p%D != 0 && mpz_cmp_si(gcd, 1) == 0 && mpz_legendre(delta.backend().data(), p.backend().data()) == -1 && mpz_legendre(E.backend().data(), p.backend().data()) == -1){
         mpz_clear(gcd);
         return true;
     }
@@ -195,28 +193,4 @@ vector<bool> decToBinary(mpz_int n, int &numDigits)
 	}
 
 	return binaryNum;
-}
-
-//given a decimal mpz_integer, return the number of digits in the binary expansion of that number
-/*int getBinaryDigits(mpz_int n){
-    return 1 + (mpz_int) log2 ((double) n);
-}*/
-
-//https://www.geeksforgeeks.org/gcd-in-cpp/
-mpz_int gcd(mpz_int a, mpz_int b) 
-{ 
-    // Everything divides 0 
-    if (a == 0) 
-        return b; 
-    if (b == 0) 
-        return a; 
-  
-    // base case 
-    if (a == b) 
-        return a; 
-  
-    // a is greater 
-    if (a > b) 
-        return gcd(a - b, b); 
-    return gcd(a, b - a); 
 }

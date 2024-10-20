@@ -2,7 +2,7 @@ publicKeySystem: main.o publicKeySystem.o test
 	g++ -std=c++14 main.o publicKeySystem.o -o publicKeySystem -lgmp
 
 clean:
-	rm *.o publicKeySystem test
+	rm *.o publicKeySystem test 
 
 publicKeySystem.o: publicKeySystem.cpp publicKeySystem.h
 	g++ -std=c++14 -c publicKeySystem.cpp 
@@ -10,5 +10,5 @@ publicKeySystem.o: publicKeySystem.cpp publicKeySystem.h
 main.o: main.cpp publicKeySystem.h
 	g++ -std=c++14 -c main.cpp 
 
-test: testing.cpp publicKeySystem.o 
-	g++ -std=c++14 testing.cpp publicKeySystem.o -o test -lgmp
+test: test_publicKeySystem.cpp publicKeySystem.o 
+	g++ -std=c++14 -Wall -g -pthread test_publicKeySystem.cpp publicKeySystem.o -lgtest_main -lgtest -lpthread -o test -lgmp
