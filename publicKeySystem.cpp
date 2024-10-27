@@ -9,12 +9,96 @@
 using namespace std;
 using namespace boost::multiprecision;
 
-vector<bool> decToBinary(mpz_int n, int &numDigits);
 mpz_int square (mpz_int num, mpz_int p);
-mpz_int gcd(mpz_int a, mpz_int b);
+void generateValues(mpz_t P1, mpz_t P2, mpz_t p, mpz_int &a);
+bool getIndividualInitialValues(mpz_int &P1, mpz_int &P2, mpz_int &a, mpz_int &p);
+vector<bool> decToBinary(mpz_int n, int &numDigits);
 
+//To be called by an individual
+void getKey(){
+    mpz_int W[4];               //representing {Lm, Km, Lm+1, Km+1}
+    mpz_int a;                  //secret key
+    mpz_int P1, P2, p;
+    const mpz_int Q = 1;
+    mpz_int La, Ka, Lb, Kb, delta; 
+    
+    individualInput(P1, P2, p, a);
+
+    delta = (pow(P1, 2) - (4*P2)) % p;
+
+    //Alice calls the first double and add algorithm
+    doubleAndAddOne(W, a, P1, P2, Q, p, delta);
+
+    //Alice send La and Ka to Bob
+    La = W[0];
+    Ka = W[1];
+    cout << endl << "Send these initial values to the intended correspondant: " << endl;
+    cout << "L: " << La << endl  << endl << "K: " << Ka << endl << endl;
+
+    //Bob sends Lb and Kb to Alice
+    cout << "Your correspondant should have sent you their initial values. Enter them here:" << endl;
+    cout << "L: ";
+    cin >> Lb;
+    cout << "K: ";
+    cin >> Kb;
+
+    //Alice calls the second double and add algorithm
+    W[0] = Lb;
+    doubleAndAddTwo(W, a, P1, P2, Q, p, delta*square(Kb, p) % p);
+
+    W[0] = positiveMod(W[0], p);
+
+    cout << endl << "Shared key 1: " << W[0] << endl << endl;
+    cout << "Shared key 2: " << positiveMod(Kb * W[1], p) << endl << endl;
+    cout << "Keep these keys secret" << endl;
+}
+
+void individualInput(mpz_int &P1, mpz_int &P2, mpz_int &p, mpz_int &a){
+    string choice = "";
+
+    while(choice != "y" && choice != "n"){
+        cout << "Would you like to generate values for P1, P2, and p? (y/n): ";
+        cin >> choice;
+    }
+    if(choice == "y")
+        generateValues(P1.backend().data(), P2.backend().data(), p.backend().data(), a);
+    else{
+        while(!getIndividualInitialValues(P1, P2, a, p)){
+            cout << "Invalid Input" << endl;
+        }
+    }
+}
+
+void generateValues(mpz_t P1, mpz_t P2, mpz_t p, mpz_int &a){
+    gmp_randstate_t state;
+    int bits = 0;
+
+    while(bits < 10 || bits > 4096){
+            cout << endl << "Size of prime: ";
+            cin >> bits;
+        }
+
+        gmp_randinit_mt (state);
+        gmp_randinit_default (state);
+        gmp_randseed_ui(state, time(NULL));
+
+        getRandInput(P1, P2, p, bits, state);
+
+        gmp_randclear(state);
+
+        cout << "P1: " << (mpz_int)P1 << endl << endl << "P2: " << (mpz_int)P2 << endl << endl << "p: " << (mpz_int)p << endl << endl;
+        cout << "Share these values with your correspondant" << endl << endl;
+
+        cout << "Enter secret integer: ";
+        cin >> a;
+        while(!validInput((mpz_int)P1, (mpz_int)P2, (mpz_int)p, 1, a, 2)){
+            cout << "Enter secret integer: ";
+            cin >> a;
+        }
+}
+
+//Entire algorithm when we have both secret keys
 bool publicKey(mpz_int Wa[4], mpz_int Wb[4], mpz_int P1, mpz_int P2, mpz_int Q, mpz_int p, mpz_int max1, mpz_int max2){
-    mpz_int a=0, b=1;
     mpz_int La, Ka, Lb, Kb;
     mpz_int delta = (pow(P1, 2) - (4*P2)) % p;
 
@@ -54,7 +138,7 @@ bool getInitialValues(mpz_int &P1, mpz_int &P2, mpz_int &max1, mpz_int &max2, mp
     cin >> P2;
     cout << "Enter p: ";
     cin >> p;
-    cout << "Enter a: ";
+    cout << endl << "Enter a: ";
     cin >> max1;
     cout << "Enter b: ";
     cin >> max2;
@@ -62,16 +146,17 @@ bool getInitialValues(mpz_int &P1, mpz_int &P2, mpz_int &max1, mpz_int &max2, mp
     return validInput(P1, P2, p, 1, max1, max2);
 }
 
-//Function for testing
-bool setInitialValues(mpz_int &P1, mpz_int &P2, mpz_int &Q, mpz_int &max1, mpz_int &max2, mpz_int &p){
-    P1 = 4;     //2|P1
-    P2 = 15;    
-    Q = 1;      //Q will always equal 1 for the crypto algorithm
-    max1 = 3;
-    max2 = 5;
-    p = 179;
+bool getIndividualInitialValues(mpz_int &P1, mpz_int &P2, mpz_int &a, mpz_int &p){
+    cout << "Enter P1: ";
+    cin >> P1;
+    cout << "Enter P2: ";
+    cin >> P2;
+    cout << "Enter p: ";
+    cin >> p;
+    cout << "Enter secret integer: ";
+    cin >> a;
 
-    return validInput(P1, P2, p, Q, max1, max2);
+    return validInput(P1, P2, p, 1, a, 2);
 }
 
 bool validInput(mpz_int P1, mpz_int P2, mpz_int p, mpz_int Q, mpz_int a, mpz_int b){
@@ -83,7 +168,7 @@ bool validInput(mpz_int P1, mpz_int P2, mpz_int p, mpz_int Q, mpz_int a, mpz_int
     mpz_init(gcd);
     mpz_gcd(gcd, P1.backend().data(), P2.backend().data());
 
-    if (D != 0 && P1 != 0 && a != 0 && b != 0 && P1%2 == 0 && p%P1 != 0 && p%D != 0 && mpz_cmp_si(gcd, 1) == 0 && mpz_legendre(delta.backend().data(), p.backend().data()) == -1 && mpz_legendre(E.backend().data(), p.backend().data()) == -1){
+    if (Q == 1 && D != 0 && P1 != 0 && a != 0 && b != 0 && P1%2 == 0 && p%P1 != 0 && p%D != 0 && mpz_cmp_si(gcd, 1) == 0 && mpz_legendre(delta.backend().data(), p.backend().data()) == -1 && mpz_legendre(E.backend().data(), p.backend().data()) == -1){
         mpz_clear(gcd);
         return true;
     }
@@ -100,7 +185,6 @@ void doubleAndAddOne(mpz_int wPrev[4], mpz_int max, mpz_int P1, mpz_int P2, mpz_
     mpz_int wNext[4];                                                       //Wi+1 representing {Lm, Km, Lm+1, Km+1}
     int h = 0;                                                              //number of digits in the binary expansion of max
     vector<bool> m = decToBinary(max, h);
-    //boost::dynamic_bitset<> m(h, max);                                  //binary expansion of max
 
     //Set initial values L1, K1 for W0
     wPrev[0] = V2/(2*Q) % p;
@@ -193,4 +277,23 @@ vector<bool> decToBinary(mpz_int n, int &numDigits)
 	}
 
 	return binaryNum;
+}
+
+void getRandInput(mpz_t P1, mpz_t P2, mpz_t p, const int bits, gmp_randstate_t state){
+    //P1 must be even, P2 must be odd and p must be prime
+    mpz_urandomb (P1, state, bits);
+    if(mpz_even_p(P1) == 0)
+        mpz_add_ui(P1, P1, 1);
+
+    //P2 must be odd since gcd(P1, P2) = 1
+    mpz_urandomb (P2, state, bits);
+    if(mpz_odd_p(P2) == 0)
+        mpz_add_ui(P2, P2, 1);
+
+
+    mpz_urandomb (p, state, bits);
+    mpz_nextprime(p, p);
+
+    while (!validInput((mpz_int)P1, (mpz_int)P2, (mpz_int)p, 1, 3, 4))
+        mpz_add_ui(P1, P1, 2);
 }

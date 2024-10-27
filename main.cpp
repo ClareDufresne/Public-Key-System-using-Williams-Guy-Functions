@@ -7,12 +7,24 @@
 using namespace std;
 using namespace boost::multiprecision;
 
+void individualKeys();
+void bothKeys();
+
 int main(){
+    individualKeys();    
+
+    return 0;
+}
+
+void individualKeys(){
+    getKey();
+}
+
+void bothKeys(){
     mpz_int Wa[4], Wb[4];       //representing {Lm, Km, Lm+1, Km+1}
     mpz_int max1, max2;         //i value representing the number of times the algorithm is to be repeated
     mpz_int P1, P2, p;
-    mpz_int Q = 1;
-    //Eventually need to change this to calculate only Alice or Bob's information
+    const mpz_int Q = 1;
  
     while (!getInitialValues(P1, P2, max1, max2, p)){
         cout << "Invalid input" << endl << endl;
@@ -27,6 +39,4 @@ int main(){
         cout << "L" << max1 << "," << max2 << ": " << positiveMod(Wa[0], p) << endl;
         cout << "L" << max2 << "," << max1 << ": "  << positiveMod(Wb[0], p) << endl; 
     }
-
-    return 0;
 }
