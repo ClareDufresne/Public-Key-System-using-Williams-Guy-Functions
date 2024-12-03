@@ -33,14 +33,22 @@ void getKey(){
     La = W[0];
     Ka = W[1];
     cout << endl << "Send these initial values to the intended correspondant: " << endl;
-    cout << "L: " << La << endl  << endl << "K: " << Ka << endl << endl;
+    cout << "L: ";
+    if(!mpz_out_str(NULL, 16, La.backend().data()))
+        cout << "ERROR" << endl;
+    cout << endl  << endl << "K: ";
+    if(!mpz_out_str(NULL, 16, Ka.backend().data()))
+        cout << "ERROR" << endl;
+    cout << endl << endl;
 
     //Bob sends Lb and Kb to Alice
-    cout << "Your correspondant should have sent you their initial values. Enter them here:" << endl;
+    cout << "Your correspondant should have sent you their initial values (in hex). Enter them here:" << endl;
     cout << "L: ";
-    cin >> Lb;
+    if(!mpz_inp_str(Lb.backend().data(), NULL, 16))
+        cout << "ERROR" << endl;
     cout << "K: ";
-    cin >> Kb;
+    if(!mpz_inp_str(Kb.backend().data(), NULL, 16))
+        cout << "ERROR" << endl;
 
     //Alice calls the second double and add algorithm
     W[0] = Lb;
@@ -48,8 +56,14 @@ void getKey(){
 
     W[0] = positiveMod(W[0], p);
 
-    cout << endl << "Shared key 1: " << W[0] << endl << endl;
-    cout << "Shared key 2: " << positiveMod(Kb * W[1], p) << endl << endl;
+    cout << endl << "Shared key 1: ";
+    if(!mpz_out_str(NULL, 16, W[0].backend().data()))
+        cout << "ERROR" << endl;
+    cout << endl << endl;
+    cout << "Shared key 2: ";
+    if(!mpz_out_str(NULL, 16, positiveMod(Kb * W[1], p).backend().data()))
+        cout << "ERROR" << endl;
+    cout << endl << endl;
     cout << "Keep these keys secret" << endl;
 }
 
@@ -86,7 +100,17 @@ void generateValues(mpz_t P1, mpz_t P2, mpz_t p, mpz_int &a){
 
         gmp_randclear(state);
 
-        cout << "P1: " << (mpz_int)P1 << endl << endl << "P2: " << (mpz_int)P2 << endl << endl << "p: " << (mpz_int)p << endl << endl;
+
+        cout << "P1: ";
+        if(!mpz_out_str(NULL, 16, P1))
+            cout << "ERROR" << endl;
+        cout << endl << endl << "P2: ";
+        if(!mpz_out_str(NULL, 16, P2))
+            cout << "ERROR" << endl;
+        cout << endl << endl << "p: ";
+        if(!mpz_out_str(NULL, 16, p))
+            cout << "ERROR" << endl;
+        cout << endl << endl;
         cout << "Share these values with your correspondant" << endl << endl;
 
         cout << "Enter secret integer: ";
@@ -132,12 +156,15 @@ bool publicKey(mpz_int Wa[4], mpz_int Wb[4], mpz_int P1, mpz_int P2, mpz_int Q, 
 }
 
 bool getInitialValues(mpz_int &P1, mpz_int &P2, mpz_int &max1, mpz_int &max2, mpz_int &p){
-    cout << "Enter P1: ";
-    cin >> P1;
-    cout << "Enter P2: ";
-    cin >> P2;
-    cout << "Enter p: ";
-    cin >> p;
+    cout << "Enter P1 (in hex): ";
+    if(!mpz_inp_str(P1.backend().data(), NULL, 16))
+        cout << "ERROR" << endl;
+    cout << "Enter P2 (in hex): ";
+    if(!mpz_inp_str(P2.backend().data(), NULL, 16))
+        cout << "ERROR" << endl;
+    cout << "Enter p (in hex): ";
+    if(!mpz_inp_str(p.backend().data(), NULL, 16))
+        cout << "ERROR" << endl;
     cout << endl << "Enter a: ";
     cin >> max1;
     cout << "Enter b: ";
@@ -147,12 +174,15 @@ bool getInitialValues(mpz_int &P1, mpz_int &P2, mpz_int &max1, mpz_int &max2, mp
 }
 
 bool getIndividualInitialValues(mpz_int &P1, mpz_int &P2, mpz_int &a, mpz_int &p){
-    cout << "Enter P1: ";
-    cin >> P1;
-    cout << "Enter P2: ";
-    cin >> P2;
-    cout << "Enter p: ";
-    cin >> p;
+    cout << "Enter P1 (in hex): ";
+    if(!mpz_inp_str(P1.backend().data(), NULL, 16))
+        cout << "ERROR" << endl;
+    cout << "Enter P2 (in hex): ";
+    if(!mpz_inp_str(P2.backend().data(), NULL, 16))
+        cout << "ERROR" << endl;
+    cout << "Enter p (in hex): ";
+    if(!mpz_inp_str(p.backend().data(), NULL, 16))
+        cout << "ERROR" << endl;
     cout << "Enter secret integer: ";
     cin >> a;
 
