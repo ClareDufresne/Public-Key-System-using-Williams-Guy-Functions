@@ -18,7 +18,7 @@ void getKey();
  * Function: publicKey
  * Input:
  *          Wa and Wb representing {Lm, Km, Lm+1, Km+1} for correspondant a and correspondant b
- *          P1, P2, Q, and p values as described in ______________
+ *          P1, P2, Q, and p values as described in Roettger (2023)
  *          max1 and max2 are the secret values of correspondants a and b
  * Return:  true if the secret keys match, false otherwise
  * Description: Run the entire algorithmn rather than prompting two separate correspondants
@@ -31,7 +31,7 @@ bool publicKey(boost::multiprecision::mpz_int Wa[4], boost::multiprecision::mpz_
  * Function: getInitialValues
  * Input:
  * Return:  true if all input is valid, false otherwise
- *          P1, P2, and p as described in _____________
+ *          P1, P2, and p as described in Roettger (2023)
  *          max1 and max2 are the secret values of correspondants a and b
  * Description: Prompt and validate all initial input values for two correspondants. Use this
  *              function before publicKey
@@ -42,7 +42,7 @@ bool getInitialValues(boost::multiprecision::mpz_int &P1, boost::multiprecision:
  * Function: individualInput
  * Input:
  * Return:
- *          P1, P2, and p as described in _____________
+ *          P1, P2, and p as described in Roettger (2023)
  *          a is the secret value for one correspondant
  * Description: To be called by individual correspondants. 
  *              Gives the option to randomly generate P1, P2 and p. Otherwise prompts for
@@ -55,11 +55,11 @@ void individualInput(boost::multiprecision::mpz_int &P1, boost::multiprecision::
  * Function: doubleAndAddOne
  * Input:   
  *          max is the secret value of one correspondant
- *          P1, P2, p, Q, and delta as described in __________
+ *          P1, P2, p, Q, and delta as described in Roettger (2023)
  * Return:  wPrev representing {Lm, Km, Lm+1, Km+1}
- * Description: performs case 1, as described in __________, pgs. 2-3) to obtain {Lmax, Kmax, Lmax+1, Kmax+1}
+ * Description: performs case 1, as described in Roettger (2023), pgs. 2-3) to obtain {Lmax, Kmax, Lmax+1, Kmax+1}
  * Assumptions: P1, P2, Q, p, and max have already been initialized and validated. 
- *              delta has been calculated as described in ______. 
+ *              delta has been calculated as described in Roettger (2023). 
 */
 void doubleAndAddOne(boost::multiprecision::mpz_int wPrev[4], boost::multiprecision::mpz_int max, boost::multiprecision::mpz_int P1, boost::multiprecision::mpz_int P2, boost::multiprecision::mpz_int Q, boost::multiprecision::mpz_int p, boost::multiprecision::mpz_int delta);
 
@@ -67,12 +67,12 @@ void doubleAndAddOne(boost::multiprecision::mpz_int wPrev[4], boost::multiprecis
  * Function: doubleAndAddTwo
  * Input:   
  *          max is the secret value of one correspondant
- *          P1, P2, p, Q, and delta as described in __________
+ *          P1, P2, p, Q, and delta as described in Roettger (2023)
  * Return:  wPrev representing {Lm, Jm, Lm+1, Jm+1}
- * Description: performs case 2, as described in __________, p. 3) to obtain {Lmax, Jmax, Jmax+1, Jmax+1}
+ * Description: performs case 2, as described in Roettger (2023), p. 3) to obtain {Lmax, Jmax, Jmax+1, Jmax+1}
  * Assumptions: P1, P2, Q, p, and max have already been initialized and validated. 
  *              wPrev[0] = Lmax of the other correspondant
- *              delta has been calculated as described in ______. 
+ *              delta has been calculated as described in Roettger (2023). 
  *              Q is equal to one
 */
 void doubleAndAddTwo(boost::multiprecision::mpz_int wPrev[4], boost::multiprecision::mpz_int max, boost::multiprecision::mpz_int P1, boost::multiprecision::mpz_int P2, boost::multiprecision::mpz_int Q, boost::multiprecision::mpz_int p, boost::multiprecision::mpz_int delta);
@@ -80,11 +80,11 @@ void doubleAndAddTwo(boost::multiprecision::mpz_int wPrev[4], boost::multiprecis
 /*
  * Function: validInput
  * Input:        
- *          P1, P2, p, and Q as described in __________
+ *          P1, P2, p, and Q as described in Roettger (2023)
  *          a and b are the secret values of the two correspondants. (When only one value is
  *          known any non-zero integer can be used in the other's place)
- * Return:  true if all input values are valid as described in ________, false otherwise
- * Description: calculates D, E and delta values as described in ______. For input to be valid,
+ * Return:  true if all input values are valid as described in Roettger (2023), false otherwise
+ * Description: calculates D, E and delta values as described in Roettger (2023). For input to be valid,
  *              D, P1, a, and b must be non-zero, Q must be 1, P1 must be even, p must not be divisible by P1
  *              or D, gcd(P1, P2) = 1, and the legendre symbols (delta | p) and (E | p) must be -1    
  */
@@ -103,7 +103,7 @@ boost::multiprecision::mpz_int positiveMod (boost::multiprecision::mpz_int n, bo
  * Input:
  *          bits indicates the size of values to be generated
  *          state object for random number generation
- * Return:  P1, P2 and p as described in _______
+ * Return:  P1, P2 and p as described in Roettger (2023)
  * Description: generate a random even number for P1 and random primes for P2 and p. Repeatedly
  *              calls validInput and iterates P1 until a valid combination is reached. 
  * Assumptions: state has been initialized and seeded
