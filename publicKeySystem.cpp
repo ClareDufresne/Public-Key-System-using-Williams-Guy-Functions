@@ -5,11 +5,15 @@
 #include <boost/dynamic_bitset.hpp>
 #include "publicKeySystem.h"
 #include <iostream>
+#include <fstream>
+#include <iostream>
+#include <vector>
 
 using namespace std;
 using namespace boost::multiprecision;
 
 mpz_int square (mpz_int num, mpz_int p);
+mpz_int square_sec (mpz_int num, mpz_int p);
 void generateValues(mpz_t P1, mpz_t P2, mpz_t p, mpz_int &a);
 bool getIndividualInitialValues(mpz_int &P1, mpz_int &P2, mpz_int &a, mpz_int &p);
 vector<bool> decToBinary(mpz_int n, int &numDigits);
@@ -24,14 +28,14 @@ void getKey(){
     
     individualInput(P1, P2, p, a);
 
-    delta = (pow(P1, 2) - (4*P2)) % p;
+    delta = (square(P1, p) - (4*P2)) % p;
 
     //Alice calls the first double and add algorithm
     doubleAndAddOne(W, a, P1, P2, Q, p, delta);
 
     //Alice send La and Ka to Bob
-    La = W[0];
-    Ka = W[1];
+    La = positiveMod(W[0], p);
+    Ka = positiveMod(W[1], p);
     cout << endl << "Send these initial values to the intended correspondant: " << endl;
     cout << "L: ";
     if(!mpz_out_str(NULL, 16, La.backend().data()))
@@ -94,7 +98,7 @@ void generateValues(mpz_t P1, mpz_t P2, mpz_t p, mpz_int &a){
 
         gmp_randinit_mt (state);
         gmp_randinit_default (state);
-        gmp_randseed_ui(state, time(NULL));
+        secure_gmp_seed(state, bits);
 
         getRandInput(P1, P2, p, bits, state);
 
@@ -124,7 +128,7 @@ void generateValues(mpz_t P1, mpz_t P2, mpz_t p, mpz_int &a){
 //Entire algorithm when we have both secret keys
 bool publicKey(mpz_int Wa[4], mpz_int Wb[4], mpz_int P1, mpz_int P2, mpz_int Q, mpz_int p, mpz_int max1, mpz_int max2){
     mpz_int La, Ka, Lb, Kb;
-    mpz_int delta = (pow(P1, 2) - (4*P2)) % p;
+    mpz_int delta = (square(P1, p) - (4*P2)) % p;
 
     //Alice calls the first double and add algorithm
     doubleAndAddOne(Wa, max1, P1, P2, Q, p, delta);
@@ -211,7 +215,7 @@ void doubleAndAddOne(mpz_int wPrev[4], mpz_int max, mpz_int P1, mpz_int P2, mpz_
     mpz_int L1, K1;
     mpz_int *A = &wPrev[0], *B = &wPrev[1], *C = &wPrev[2], *D = &wPrev[3]; //so equations resemble those in the paper
     mpz_int U2 = P1;
-    mpz_int V2 = (pow(P1, 2) - 2*P2 - 4*Q) % p;
+    mpz_int V2 = (square(P1, p) - 2*P2 - 4*Q) % p;
     mpz_int wNext[4];                                                       //Wi+1 representing {Lm, Km, Lm+1, Km+1}
     int h = 0;                                                              //number of digits in the binary expansion of max
     vector<bool> m = decToBinary(max, h);
@@ -222,7 +226,7 @@ void doubleAndAddOne(mpz_int wPrev[4], mpz_int max, mpz_int P1, mpz_int P2, mpz_
     wPrev[1] = U2/(2*Q) % p;
     K1 = wPrev[1];
     //Set L2 and K2 using (5)
-    wPrev[2] = (pow(wPrev[0], 2) + delta * pow(wPrev[1], 2) - 2) % p;
+    wPrev[2] = (square(wPrev[0], p) + delta * square(wPrev[1], p) - 2) % p;
     wPrev[3] = (2 * wPrev[0] * wPrev[1]) % p;
 
     //Compute Wi+1 using Wi until Wh = {Lm, Km, Lm+1, Km+1}
@@ -263,7 +267,7 @@ void doubleAndAddTwo(mpz_int wPrev[4], mpz_int max, mpz_int P1, mpz_int P2, mpz_
     //Comput Wi+1 using Wi until Wh = {Lm, Jm, Lm+1, Jm+1}
     for(int i = h-1; i > 0; i--){
         if(m[i-1] == 0){
-            wNext[0] = (square(*A, p) + delta * square(*B, p) -2) % p;
+            wNext[0] = (square_sec(*A, p) + delta * square_sec(*B, p) -2) % p;
             wNext[1] = (2 * *A * *B) % p;
             wNext[2] = (*A * *C + delta * *B * *D - L1) % p;
             wNext[3] = (*B * *C + *A * *D - 1) % p;
@@ -271,7 +275,7 @@ void doubleAndAddTwo(mpz_int wPrev[4], mpz_int max, mpz_int P1, mpz_int P2, mpz_
         else{
             wNext[0] = (*A * *C + delta * *B * *D - L1) % p;
             wNext[1] = (*B * *C + *A * *D - 1) % p;
-            wNext[2] = (square(*C, p) + delta * square(*D, p) - 2) % p;
+            wNext[2] = (square_sec(*C, p) + delta * square_sec(*D, p) - 2) % p;
             wNext[3] = (2 * *C * *D) % p;
         }
 
@@ -283,7 +287,21 @@ void doubleAndAddTwo(mpz_int wPrev[4], mpz_int max, mpz_int P1, mpz_int P2, mpz_
 }
 
 mpz_int square (mpz_int num, mpz_int p){
-    return pow(num, 2) % p;
+    mpz_int rop;
+    mpz_int exp = 2;
+
+    mpz_powm (rop.backend().data(), num.backend().data(), exp.backend().data(), p.backend().data());
+
+    return rop;
+}
+
+mpz_int square_sec (mpz_int num, mpz_int p){
+    mpz_int rop;
+    mpz_int exp = 2;
+
+    mpz_powm_sec(rop.backend().data(), num.backend().data(), exp.backend().data(), p.backend().data());
+
+    return rop;
 }
 
 //return the positive value of n mod p
@@ -326,4 +344,30 @@ void getRandInput(mpz_t P1, mpz_t P2, mpz_t p, const int bits, gmp_randstate_t s
 
     while (!validInput((mpz_int)P1, (mpz_int)P2, (mpz_int)p, 1, 3, 4))
         mpz_add_ui(P1, P1, 2);
+}
+
+
+void secure_gmp_seed(gmp_randstate_t state, int bits) {
+    const size_t SEED_BYTES = (static_cast<size_t>(bits) + 7) / 8;
+    vector<char> buffer(SEED_BYTES);
+
+    //Read the secure bytes from the OS's non-blocking random source
+    ifstream urandom("/dev/urandom", ios::in | ios::binary);
+    if (!urandom) {
+        cerr << "Error: Could not open /dev/urandom for secure seeding." << endl;
+        return;
+    }
+    
+    urandom.read(buffer.data(), SEED_BYTES);
+    urandom.close();
+
+    // Convert the byte array into an mpz_t 
+    mpz_t seed_val;
+    mpz_init(seed_val);
+    mpz_import(seed_val, SEED_BYTES, 1, 1, 0, 0, buffer.data());
+
+    //Seed the state with the large, secure GMP integer
+    gmp_randseed(state, seed_val);
+    
+    mpz_clear(seed_val);
 }

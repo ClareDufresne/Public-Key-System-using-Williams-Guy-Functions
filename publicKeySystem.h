@@ -111,4 +111,15 @@ boost::multiprecision::mpz_int positiveMod (boost::multiprecision::mpz_int n, bo
 */
 void getRandInput(mpz_t P1, mpz_t P2, mpz_t p, const int bits, gmp_randstate_t state);
 
+/*
+ * Function: secure_gmp_seed
+ * Input:
+ *          bits indicates the size of values to be generated
+ *          state object for random number generation
+ * Return:  
+ * Description: securely seed the state object
+ * Assumptions: state has been initialized
+*/
+void secure_gmp_seed(gmp_randstate_t state, int bits);
+
 #endif  
